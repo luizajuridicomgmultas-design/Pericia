@@ -25,6 +25,7 @@ const IconTrash = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="no
 export default function App() {
     const [step, setStep] = useState(1);
     const [user, setUser] = useState(null);
+    const [selectedUserKey, setSelectedUserKey] = useState(null);
     
     const today = new Date().toISOString().split('T')[0];
     const [date, setDate] = useState(today);
@@ -44,10 +45,6 @@ export default function App() {
     const btnSuccess = `${btnBase} bg-green-700 text-white border-4 border-green-900`;
 
     useEffect(() => {
-        // Carregar identidade salva do localStorage
-        const savedId = localStorage.getItem('saved_identidade');
-        if (savedId) setIdentidadeImg(savedId);
-
         // Injetar scripts necessários para PDF
         const script1 = document.createElement('script');
         script1.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -58,6 +55,13 @@ export default function App() {
         document.head.appendChild(script2);
     }, []);
 
+    useEffect(() => {
+        if (!selectedUserKey) return;
+
+        const savedId = localStorage.getItem(`saved_identidade_${selectedUserKey}`);
+        setIdentidadeImg(savedId || null);
+    }, [selectedUserKey]);
+
     const handleFileRead = (e, setter, saveLocal = false) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -66,15 +70,17 @@ export default function App() {
         reader.onload = (event) => {
             const base64 = event.target.result;
             setter(base64);
-            if (saveLocal) {
-                localStorage.setItem('saved_identidade', base64);
+            if (saveLocal && selectedUserKey) {
+                localStorage.setItem(`saved_identidade_${selectedUserKey}`, base64);
             }
         };
         reader.readAsDataURL(file);
     };
 
     const removeSavedId = () => {
-        localStorage.removeItem('saved_identidade');
+        if (selectedUserKey) {
+            localStorage.removeItem(`saved_identidade_${selectedUserKey}`);
+        }
         setIdentidadeImg(null);
     };
 
@@ -215,14 +221,14 @@ export default function App() {
                     </h1>
                     <button 
                         className={btnPrimary}
-                        onClick={() => { setUser(USERS.maria); setStep(2); }}
+                        onClick={() => { setSelectedUserKey('maria'); setUser(USERS.maria); setStep(2); }}
                     >
                         <IconUser />
                         SOU A MARIA
                     </button>
                     <button 
                         className={`${btnBase} bg-indigo-700 text-white border-4 border-indigo-900`}
-                        onClick={() => { setUser(USERS.angela); setStep(2); }}
+                        onClick={() => { setSelectedUserKey('angela'); setUser(USERS.angela); setStep(2); }}
                     >
                         <IconUser />
                         SOU A ÂNGELA
@@ -350,10 +356,12 @@ export default function App() {
 
                     <div className="bg-white p-4 rounded-xl border-4 border-slate-200 relative">
                         <h2 className="text-2xl font-bold text-slate-800 mb-2 text-center">FOTO DA IDENTIDADE</h2>
-                        <p className="text-center text-slate-600 font-bold mb-4 uppercase text-lg">(Opcional)</p>
+                        <p className="text-center text-slate-600 font-bold mb-4 uppercase text-lg">
+                            {identidadeImg ? '(Já está salva para esta pessoa)' : '(Salvar uma vez para esta pessoa)'}
+                        </p>
                         
                         <label className={`cursor-pointer ${identidadeImg ? btnSecondary + ' border-green-500' : btnSecondary}`}>
-                            {identidadeImg ? <><IconCheck /><span className="text-green-700 text-xl">Identidade Salva!</span></> : <><IconCamera />TIRAR FOTO DA IDENTIDADE</>}
+                            {identidadeImg ? <><IconCheck /><span className="text-green-700 text-xl">Identidade já salva!</span><span className="text-lg text-slate-500 underline mt-2">Trocar identidade</span></> : <><IconCamera />SALVAR IDENTIDADE</>}
                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileRead(e, setIdentidadeImg, true)} />
                         </label>
                         
@@ -409,7 +417,7 @@ export default function App() {
                     <p className="text-2xl text-slate-700 mt-4">
                         O requerimento foi enviado automaticamente para a perícia médica.
                     </p>
-                    <button className={`${btnPrimary} mt-10`} onClick={() => { setStep(1); setAtestadoImg(null); }}>
+                    <button className={`${btnPrimary} mt-10`} onClick={() => { setStep(1); setUser(null); setSelectedUserKey(null); setAtestadoImg(null); setIdentidadeImg(null); }}>
                         Fazer Outro Requerimento
                     </button>
                 </div>
