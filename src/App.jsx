@@ -142,8 +142,35 @@ export default function App() {
             }
 
             const pdfBlob = doc.output('blob');
-            const fileName = `Requerimento_${user.nome.split(' ')[0]}_${date.replace(/-/g, '')}.pdf`;
-            const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+const fileName = `Requerimento_${user.nome.split(' ')[0]}_${date.replace(/-/g, '')}.pdf`;
+
+const reader = new FileReader();
+
+reader.onloadend = async () => {
+    const pdfBase64 = reader.result.split(",")[1];
+
+    const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            fileName,
+            pdfBase64,
+            userName: user.nome,
+        }),
+    });
+
+    if (!response.ok) {
+        alert("Erro ao enviar o e-mail. Tente novamente.");
+        return;
+    }
+
+    alert("E-mail enviado com sucesso!");
+    setStep(5);
+};
+
+reader.readAsDataURL(pdfBlob);
 
             const reader = new FileReader();
 
