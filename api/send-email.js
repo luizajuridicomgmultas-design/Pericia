@@ -1,6 +1,4 @@
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -10,26 +8,32 @@ export default async function handler(req, res) {
   try {
     const { fileName, pdfBase64, userName } = req.body;
 
-    await resend.emails.send({
-      from: "Perícia App <onboarding@resend.dev>",
-      to: "camilapazenge@gmail.com",
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_TO,
       subject: `Requerimento de Perícia Médica - ${userName}`,
-      html: `
-        <p>Prezados,</p>
-        <p>Segue em anexo o formulário de requerimento para perícia médica devidamente preenchido, acompanhado do(s) documento(s) necessário(s).</p>
-        <p>Atenciosamente.</p>
-      `,
+      text: `Olá, segue em anexo o requerimento de perícia médica de ${userName}.`,
       attachments: [
         {
           filename: fileName,
           content: pdfBase64,
+          encoding: "base64",
         },
       ],
     });
 
     return res.status(200).json({ success: true });
+
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Erro ao enviar e-mail" });
+    return res.status(500).json({ error: "Erro ao enviar email" });
   }
 }
