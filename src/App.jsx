@@ -84,113 +84,149 @@ export default function App() {
         setIdentidadeImg(null);
     };
 
+    const compressImageDataUrl = (dataUrl, maxWidth = 1200, quality = 0.65) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, maxWidth / img.width);
+                const width = Math.round(img.width * scale);
+                const height = Math.round(img.height * scale);
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+
+                resolve(canvas.toDataURL("image/jpeg", quality));
+            };
+            img.onerror = reject;
+            img.src = dataUrl;
+        });
+    };
+
+    const blobToBase64 = (blob) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    };
+
     const generateAndSharePDF = async () => {
         setIsGenerating(true);
+
         try {
             if (!window.jspdf || !window.html2canvas) {
                 alert("Carregando recursos para gerar PDF. Tente novamente em 2 segundos.");
-                setIsGenerating(false);
+                return;
+            }
+
+            if (!user) {
+                alert("Selecione a pessoa antes de enviar.");
+                return;
+            }
+
+            if (!atestadoImg) {
+                alert("Antes de enviar, anexe a foto do atestado.");
                 return;
             }
 
             const { jsPDF } = window.jspdf;
             const html2canvas = window.html2canvas;
 
-            const doc = new jsPDF('p', 'mm', 'a4');
+            const doc = new jsPDF({
+                orientation: "p",
+                unit: "mm",
+                format: "a4",
+                compress: true,
+            });
+
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
 
-            const formElement = document.getElementById('pdf-template-container');
-            const canvas = await html2canvas(formElement, { scale: 2 });
-            const formImg = canvas.toDataURL('image/jpeg', 0.8);
-            
+            const formElement = document.getElementById("pdf-template-container");
+            const canvas = await html2canvas(formElement, {
+                scale: 1.4,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+            });
+
+            const formImg = canvas.toDataURL("image/jpeg", 0.65);
             const imgProps = doc.getImageProperties(formImg);
             const pdfHeight = (imgProps.height * pageWidth) / imgProps.width;
-            doc.addImage(formImg, 'JPEG', 0, 0, pageWidth, pdfHeight);
+            doc.addImage(formImg, "JPEG", 0, 0, pageWidth, pdfHeight, undefined, "FAST");
 
-            if (atestadoImg) {
+            const addFullPageImage = async (imageDataUrl) => {
+                const compressedImg = await compressImageDataUrl(imageDataUrl, 1200, 0.65);
                 doc.addPage();
-                const atesProps = doc.getImageProperties(atestadoImg);
+
+                const props = doc.getImageProperties(compressedImg);
                 const margin = 10;
-                const maxWidth = pageWidth - (margin * 2);
-                const maxHeight = pageHeight - (margin * 2);
-                
+                const maxWidth = pageWidth - margin * 2;
+                const maxHeight = pageHeight - margin * 2;
+
                 let finalW = maxWidth;
-                let finalH = (atesProps.height * maxWidth) / atesProps.width;
-                
+                let finalH = (props.height * maxWidth) / props.width;
+
                 if (finalH > maxHeight) {
                     finalH = maxHeight;
-                    finalW = (atesProps.width * maxHeight) / atesProps.height;
+                    finalW = (props.width * maxHeight) / props.height;
                 }
-                
+
                 const x = (pageWidth - finalW) / 2;
                 const y = (pageHeight - finalH) / 2;
-                doc.addImage(atestadoImg, 'JPEG', x, y, finalW, finalH);
-            }
-
-            if (identidadeImg) {
-                doc.addPage();
-                const idProps = doc.getImageProperties(identidadeImg);
-                const margin = 10;
-                const maxWidth = pageWidth - (margin * 2);
-                const maxHeight = pageHeight - (margin * 2);
-                let finalW = maxWidth;
-                let finalH = (idProps.height * maxWidth) / idProps.width;
-                
-                if (finalH > maxHeight) {
-                    finalH = maxHeight;
-                    finalW = (idProps.width * maxHeight) / idProps.height;
-                }
-                
-                const x = (pageWidth - finalW) / 2;
-                const y = (pageHeight - finalH) / 2;
-                doc.addImage(identidadeImg, 'JPEG', x, y, finalW, finalH);
-            }
-
-            const pdfBlob = doc.output('blob');
-            const fileName = `Requerimento_${user.nome.split(' ')[0]}_${date.replace(/-/g, '')}.pdf`;
-
-            const reader = new FileReader();
-
-            reader.onloadend = async () => {
-                try {
-                    const pdfBase64 = reader.result.split(",")[1];
-
-                    const response = await fetch("/api/send-email", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            fileName,
-                            pdfBase64,
-                            userName: user.nome,
-                        }),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        alert(data.error || "Erro ao enviar o e-mail. Tente novamente.");
-                        return;
-                    }
-
-                    alert("E-mail enviado com sucesso!");
-                    setStep(5);
-
-                } catch (err) {
-                    console.error(err);
-                    alert("Erro ao enviar o e-mail. Tente novamente.");
-                } finally {
-                    setIsGenerating(false);
-                }
+                doc.addImage(compressedImg, "JPEG", x, y, finalW, finalH, undefined, "FAST");
             };
 
-            reader.readAsDataURL(pdfBlob);
-            return;
+            await addFullPageImage(atestadoImg);
+
+            if (identidadeImg) {
+                await addFullPageImage(identidadeImg);
+            }
+
+            const pdfBlob = doc.output("blob");
+            const fileName = `Requerimento_${user.nome.split(" ")[0]}_${date.replace(/-/g, "")}.pdf`;
+            const pdfBase64 = await blobToBase64(pdfBlob);
+
+            const response = await fetch("/api/send-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    fileName,
+                    pdfBase64,
+                    userName: user.nome,
+                    userEmail: user.email,
+                }),
+            });
+
+            const rawText = await response.text();
+            let data = {};
+
+            try {
+                data = rawText ? JSON.parse(rawText) : {};
+            } catch {
+                data = { error: rawText };
+            }
+
+            if (!response.ok) {
+                console.error("Erro da API:", data);
+                alert(data.error || "Erro ao enviar o e-mail. Tente novamente.");
+                return;
+            }
+
+            alert("E-mail enviado com sucesso!");
+            setStep(5);
+
         } catch (error) {
             console.error(error);
-            alert("Erro ao gerar o PDF. Tente novamente.");
+            alert("Erro ao gerar ou enviar o PDF. Tente novamente.");
         } finally {
             setIsGenerating(false);
         }
