@@ -12,11 +12,11 @@ export default async function handler(req, res) {
 
     await resend.emails.send({
       from: "Perícia App <onboarding@resend.dev>",
-      to: "periciamedica.agendamento@contagem.mg.gov.br",
+      to: "camilapazenge@gmail.com",
       subject: `Requerimento de Perícia Médica - ${userName}`,
       html: `
-        <p>Olá,</p>
-        <p>Segue em anexo o requerimento de perícia médica.</p>
+        <p>Prezados,</p>
+        <p>Segue em anexo o formulário de requerimento para perícia médica devidamente preenchido, acompanhado do(s) documento(s) necessário(s).</p>
         <p>Atenciosamente.</p>
       `,
       attachments: [
