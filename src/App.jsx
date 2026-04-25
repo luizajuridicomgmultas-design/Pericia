@@ -145,14 +145,32 @@ export default function App() {
             const fileName = `Requerimento_${user.nome.split(' ')[0]}_${date.replace(/-/g, '')}.pdf`;
             const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: 'Requerimento de Perícia',
-                    text: `Olá, segue em anexo o requerimento de perícia médica de ${user.nome}.`,
-                    files: [file]
-                });
-                setStep(5);
-            } else {
+            const reader = new FileReader();
+
+reader.onloadend = async () => {
+    const pdfBase64 = reader.result.split(",")[1];
+
+    const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            fileName,
+            pdfBase64,
+            userName: user.nome,
+        }),
+    });
+
+    if (!response.ok) {
+        alert("Erro ao enviar o e-mail. Tente novamente.");
+        return;
+    }
+
+    setStep(5);
+};
+
+reader.readAsDataURL(pdfBlob); {
                 const url = URL.createObjectURL(pdfBlob);
                 const a = document.createElement('a');
                 a.href = url;
