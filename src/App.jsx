@@ -142,69 +142,46 @@ export default function App() {
             }
 
             const pdfBlob = doc.output('blob');
-const fileName = `Requerimento_${user.nome.split(' ')[0]}_${date.replace(/-/g, '')}.pdf`;
-
-const reader = new FileReader();
-
-reader.onloadend = async () => {
-    const pdfBase64 = reader.result.split(",")[1];
-
-    const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            fileName,
-            pdfBase64,
-            userName: user.nome,
-        }),
-    });
-
-    if (!response.ok) {
-        alert("Erro ao enviar o e-mail. Tente novamente.");
-        return;
-    }
-
-    alert("E-mail enviado com sucesso!");
-    setStep(5);
-};
-
-reader.readAsDataURL(pdfBlob);
+            const fileName = `Requerimento_${user.nome.split(' ')[0]}_${date.replace(/-/g, '')}.pdf`;
 
             const reader = new FileReader();
 
-reader.onloadend = async () => {
-    const pdfBase64 = reader.result.split(",")[1];
+            reader.onloadend = async () => {
+                try {
+                    const pdfBase64 = reader.result.split(",")[1];
 
-    const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            fileName,
-            pdfBase64,
-            userName: user.nome,
-        }),
-    });
+                    const response = await fetch("/api/send-email", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            fileName,
+                            pdfBase64,
+                            userName: user.nome,
+                        }),
+                    });
 
-    if (!response.ok) {
-        alert("Erro ao enviar o e-mail. Tente novamente.");
-        return;
-    }
+                    const data = await response.json();
 
-    setStep(5);
-};
+                    if (!response.ok) {
+                        alert(data.error || "Erro ao enviar o e-mail. Tente novamente.");
+                        return;
+                    }
 
-reader.readAsDataURL(pdfBlob); {
-                const url = URL.createObjectURL(pdfBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                a.click();
-                setStep(5);
-            }
+                    alert("E-mail enviado com sucesso!");
+                    setStep(5);
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Erro ao enviar o e-mail. Tente novamente.");
+                } finally {
+                    setIsGenerating(false);
+                }
+            };
+
+            reader.readAsDataURL(pdfBlob);
+            return;
         } catch (error) {
             console.error(error);
             alert("Erro ao gerar o PDF. Tente novamente.");
@@ -430,7 +407,7 @@ reader.readAsDataURL(pdfBlob); {
                         Sucesso!
                     </h1>
                     <p className="text-2xl text-slate-700 mt-4">
-                        O arquivo foi processado. Se a tela do seu e-mail ou WhatsApp abriu, basta enviar!
+                        O requerimento foi enviado automaticamente para a perícia médica.
                     </p>
                     <button className={`${btnPrimary} mt-10`} onClick={() => { setStep(1); setAtestadoImg(null); }}>
                         Fazer Outro Requerimento
