@@ -180,45 +180,45 @@ export default function App() {
     const d = splitData(date);
 
     // Campos superiores. Coordenadas calculadas diretamente sobre o PDF original A4.
-    safeDraw(page, user.nome, 100, 716, { font, size: 8.2, maxWidth: 310, color: black });
-    safeDraw(page, user.cpf, 468, 716, { font, size: 8.2, maxWidth: 88, color: black });
-    safeDraw(page, user.cargo, 101, 701, { font, size: 7.8, maxWidth: 185, color: black });
-    safeDraw(page, user.orgao, 398, 701, { font, size: 8.2, maxWidth: 120, color: black });
-    safeDraw(page, user.mat1, 96, 686, { font, size: 8.2, maxWidth: 90, color: black });
-    safeDraw(page, user.unid1, 127, 671, { font, size: 7.8, maxWidth: 145, color: black });
-    markX(page, 104, 652, bold); // Efetivo(a)
-    safeDraw(page, user.tel, 72, 625, { font, size: 7.8, maxWidth: 105, color: black });
-    safeDraw(page, user.email, 237, 625, { font, size: 7.2, maxWidth: 180, color: black });
+    safeDraw(page, user.nome, 98, 710, { font, size: 7.4, maxWidth: 310, color: black });
+    safeDraw(page, user.cpf, 469, 710, { font, size: 7.4, maxWidth: 88, color: black });
+    safeDraw(page, user.cargo, 101, 695, { font, size: 7.1, maxWidth: 180, color: black });
+    safeDraw(page, user.orgao, 398, 695, { font, size: 7.4, maxWidth: 120, color: black });
+    safeDraw(page, user.mat1, 96, 680, { font, size: 7.4, maxWidth: 90, color: black });
+    safeDraw(page, user.unid1, 127, 665, { font, size: 7.1, maxWidth: 145, color: black });
+    markX(page, 104, 647, bold); // Efetivo(a)
+    safeDraw(page, user.tel, 72, 619, { font, size: 7.1, maxWidth: 105, color: black });
+    safeDraw(page, user.email, 237, 619, { font, size: 6.7, maxWidth: 180, color: black });
 
     // Turno
-    if (shift === 'manha') markX(page, 344, 585, bold);
-    if (shift === 'tarde') markX(page, 432, 585, bold);
+    if (shift === 'manha') markX(page, 344, 580, bold);
+    if (shift === 'tarde') markX(page, 432, 580, bold);
 
     // Tipo de perícia e data da linha correta
     if (leaveType === '01_03') {
-      markX(page, 35, 569, bold);
-      safeDraw(page, d.completa, 421, 571, { font: bold, size: 8.3, maxWidth: 75, color: black });
+      markX(page, 35, 563, bold);
+      safeDraw(page, d.completa, 421, 564, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === '04_15') {
-      markX(page, 35, 529, bold);
-      safeDraw(page, d.completa, 421, 530, { font: bold, size: 8.3, maxWidth: 75, color: black });
+      markX(page, 35, 523, bold);
+      safeDraw(page, d.completa, 421, 524, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === 'acima_15') {
-      markX(page, 35, 502, bold);
-      safeDraw(page, d.completa, 421, 503, { font: bold, size: 8.3, maxWidth: 75, color: black });
+      markX(page, 35, 496, bold);
+      safeDraw(page, d.completa, 421, 497, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === 'acompanhamento') {
-      markX(page, 35, 430, bold);
-      safeDraw(page, d.completa, 513, 431, { font: bold, size: 8.3, maxWidth: 75, color: black });
-      if (acompType === '01_03') markX(page, 151, 391, bold);
-      if (acompType === 'acima_04') markX(page, 151, 376, bold);
-      safeDraw(page, kinship, 238, 347, { font, size: 8.2, maxWidth: 145, color: black });
+      markX(page, 35, 424, bold);
+      safeDraw(page, d.completa, 513, 425, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      if (acompType === '01_03') markX(page, 151, 385, bold);
+      if (acompType === 'acima_04') markX(page, 151, 370, bold);
+      safeDraw(page, kinship, 238, 341, { font, size: 7.4, maxWidth: 145, color: black });
     }
 
     // Rodapé da data
-    safeDraw(page, d.dia, 292, 32, { font: bold, size: 9, maxWidth: 22, color: black });
-    safeDraw(page, d.mes, 336, 32, { font: bold, size: 9, maxWidth: 22, color: black });
-    safeDraw(page, d.ano, 380, 32, { font: bold, size: 9, maxWidth: 40, color: black });
+    safeDraw(page, d.dia, 292, 49, { font: bold, size: 8, maxWidth: 22, color: black });
+    safeDraw(page, d.mes, 336, 49, { font: bold, size: 8, maxWidth: 22, color: black });
+    safeDraw(page, d.ano, 380, 49, { font: bold, size: 8, maxWidth: 40, color: black });
   };
 
   const appendDocumentPages = async (pdfDoc, pdfLib, docFile) => {
