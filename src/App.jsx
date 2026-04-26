@@ -188,46 +188,47 @@ export default function App() {
     const black = rgb(0, 0, 0);
     const d = splitData(date);
 
-    // Campos superiores. Coordenadas calculadas diretamente sobre o PDF original A4.
-    safeDraw(page, user.nome, 98, 714, { font, size: 7.4, maxWidth: 310, color: black });
-    safeDraw(page, user.cpf, 469, 714, { font, size: 7.4, maxWidth: 88, color: black });
-    safeDraw(page, user.cargo, 101, 699, { font, size: 7.1, maxWidth: 180, color: black });
-    safeDraw(page, user.orgao, 398, 699, { font, size: 7.4, maxWidth: 120, color: black });
-    safeDraw(page, user.mat1, 96, 684, { font, size: 7.4, maxWidth: 90, color: black });
-    safeDraw(page, user.unid1, 127, 669, { font, size: 7.1, maxWidth: 145, color: black });
-    markX(page, 99, 648, bold); // Efetivo(a)
-    safeDraw(page, user.tel, 72, 632, { font, size: 7.1, maxWidth: 105, color: black });
-    safeDraw(page, user.email, 237, 632, { font, size: 6.7, maxWidth: 180, color: black });
+    // Coordenadas extraídas diretamente do PDF original via pdfplumber (origem canto inferior esquerdo).
+    // Fórmula: pdflib_y = pageHeight(842) - word.bottom
+    safeDraw(page, user.nome, 110, 713, { font, size: 7.4, maxWidth: 310, color: black });
+    safeDraw(page, user.cpf, 453, 713, { font, size: 7.4, maxWidth: 88, color: black });
+    safeDraw(page, user.cargo, 101, 697, { font, size: 7.1, maxWidth: 200, color: black });
+    safeDraw(page, user.orgao, 383, 697, { font, size: 7.4, maxWidth: 120, color: black });
+    safeDraw(page, user.mat1, 96, 682, { font, size: 7.4, maxWidth: 120, color: black });
+    safeDraw(page, user.unid1, 148, 667, { font, size: 7.1, maxWidth: 110, color: black });
+    markX(page, 100, 650, bold); // Efetivo(a)
+    safeDraw(page, user.tel, 72, 627, { font, size: 7.1, maxWidth: 105, color: black });
+    safeDraw(page, user.email, 237, 627, { font, size: 6.7, maxWidth: 180, color: black });
 
     // Turno
-    if (shift === 'manha') markX(page, 344, 580, bold);
-    if (shift === 'tarde') markX(page, 432, 580, bold);
+    if (shift === 'manha') markX(page, 345, 583, bold);
+    if (shift === 'tarde') markX(page, 434, 583, bold);
 
     // Tipo de perícia e data da linha correta
     if (leaveType === '01_03') {
-      markX(page, 31, 567, bold);
-      safeDraw(page, d.completa, 421, 568, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      markX(page, 31, 568, bold);
+      safeDraw(page, d.completa, 401, 568, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === '04_15') {
       markX(page, 31, 527, bold);
-      safeDraw(page, d.completa, 421, 528, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      safeDraw(page, d.completa, 401, 527, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === 'acima_15') {
       markX(page, 31, 500, bold);
-      safeDraw(page, d.completa, 421, 501, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      safeDraw(page, d.completa, 394, 500, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === 'acompanhamento') {
-      markX(page, 31, 428, bold);
-      safeDraw(page, d.completa, 513, 429, { font: bold, size: 7.6, maxWidth: 75, color: black });
-      if (acompType === '01_03') markX(page, 151, 385, bold);
-      if (acompType === 'acima_04') markX(page, 151, 370, bold);
-      safeDraw(page, kinship, 238, 341, { font, size: 7.4, maxWidth: 145, color: black });
+      markX(page, 31, 431, bold);
+      safeDraw(page, d.completa, 487, 431, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      if (acompType === '01_03') markX(page, 151, 406, bold);
+      if (acompType === 'acima_04') markX(page, 151, 393, bold);
+      safeDraw(page, kinship, 157, 373, { font, size: 7.4, maxWidth: 220, color: black });
     }
 
-    // Rodapé da data
-    safeDraw(page, d.dia, 292, 55, { font: bold, size: 8, maxWidth: 22, color: black });
-    safeDraw(page, d.mes, 336, 55, { font: bold, size: 8, maxWidth: 22, color: black });
-    safeDraw(page, d.ano, 380, 55, { font: bold, size: 8, maxWidth: 40, color: black });
+    // Rodapé da data (barras em x=308 e x=334, ano após x=345)
+    safeDraw(page, d.dia, 285, 52, { font: bold, size: 8, maxWidth: 22, color: black });
+    safeDraw(page, d.mes, 315, 52, { font: bold, size: 8, maxWidth: 22, color: black });
+    safeDraw(page, d.ano, 345, 52, { font: bold, size: 8, maxWidth: 40, color: black });
   };
 
   const appendDocumentPages = async (pdfDoc, pdfLib, docFile) => {
