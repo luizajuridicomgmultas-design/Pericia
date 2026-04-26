@@ -233,7 +233,6 @@ export default function App() {
             }
 
             drawBottomDate();
-            }
 
             const addFullPageImage = async (imageDataUrl) => {
                 const compressedImg = await compressImageDataUrl(imageDataUrl, 1200, 0.68);
