@@ -193,7 +193,7 @@ export default function App() {
 
     const draw = (text, x, y, opts = {}) => {
       if (!text) return;
-      const { f = font, size = 7.5, maxW = 200 } = opts;
+      const { f = font, size = 9, maxW = 200 } = opts;
       let s = size;
       let t = String(text);
       while (f.widthOfTextAtSize(t, s) > maxW && s > 5) s -= 0.2;
@@ -202,7 +202,7 @@ export default function App() {
 
     // Marca X dentro de um checkbox (box de 9x9pts)
     const markX = (x, y) => {
-      page.drawText('X', { x: x + 1, y: y + 1, size: 7, font: bold, color: black });
+      page.drawText('X', { x: x + 1, y: y + 1, size: 8, font: bold, color: black });
     };
 
     // ── Dados pessoais ──────────────────────────────────────────────
@@ -232,80 +232,73 @@ export default function App() {
     // ── Tipo de perícia ─────────────────────────────────────────────
     // Cada seção tem: checkbox de agendamento (x0=34.9) + Manhã/Tarde + data
 
+    // Helper: escreve a data como string única dentro do campo ____/_____/_____
+    // x0 = início do campo de data conforme extraído do PDF
+    const drawDate = (x0, y) => {
+      draw(`${d.dia}/${d.mes}/${d.ano}`, x0 + 2, y, { f: bold, size: 9, maxW: 90 });
+    };
+
     if (leaveType === '01_03') {
       // Checkbox agendamento: box x0=34.9 top=281.5 -> pdf_y=841.92-290.5=551
       markX(35, 551);
-      // Data: '____/_____/_____' começa x=283.9 top=279.9 -> pdf_y=841.92-289.9=552
-      draw(d.dia, 284, 552, { f: bold, size: 7.5, maxW: 20 });
-      draw(d.mes, 307, 552, { f: bold, size: 7.5, maxW: 25 });
-      draw(d.ano, 338, 552, { f: bold, size: 7.5, maxW: 35 });
+      // Data: '____/_____/_____' x0=283.9 top=279.9 -> pdf_y=552
+      drawDate(283.9, 552);
     }
 
     if (leaveType === '04_15') {
-      // Manhã: box x0=370.6 top=331.4 -> pdf_y=841.92-340.4=501.5
+      // Manhã: box x0=370.6 top=331.4 -> pdf_y=501
       if (shift === 'manha') markX(371, 501);
-      // Tarde: box x0=457.1 top=332.6 -> pdf_y=841.92-341.6=500.3
+      // Tarde: box x0=457.1 top=332.6 -> pdf_y=500
       if (shift === 'tarde') markX(458, 500);
-      // Agendamento: box x0=34.9 top=351.4 -> pdf_y=841.92-360.4=481.5
+      // Agendamento: box x0=34.9 top=351.4 -> pdf_y=481
       markX(35, 481);
-      // Data: x0=283.9 top=349.7 -> pdf_y=841.92-358.7=483.2
-      draw(d.dia, 284, 483, { f: bold, size: 7.5, maxW: 20 });
-      draw(d.mes, 307, 483, { f: bold, size: 7.5, maxW: 25 });
-      draw(d.ano, 338, 483, { f: bold, size: 7.5, maxW: 35 });
+      // Data: x0=283.9 top=349.7 -> pdf_y=483
+      drawDate(283.9, 483);
     }
 
     if (leaveType === 'acima_15') {
-      // Manhã: box x0=371.3 top=402.8 -> pdf_y=841.92-411.8=430.1
+      // Manhã: box x0=371.3 top=402.8 -> pdf_y=430
       if (shift === 'manha') markX(372, 430);
-      // Tarde: box x0=456.1 top=403.6 -> pdf_y=841.92-412.6=429.3
+      // Tarde: box x0=456.1 top=403.6 -> pdf_y=429
       if (shift === 'tarde') markX(457, 429);
-      // Agendamento: box x0=34.9 top=422.9 -> pdf_y=841.92-431.9=410
+      // Agendamento: box x0=34.9 top=422.9 -> pdf_y=410
       markX(35, 410);
-      // Data: x0=283.9 top=421.3 -> pdf_y=841.92-430.3=411.6
-      draw(d.dia, 284, 412, { f: bold, size: 7.5, maxW: 20 });
-      draw(d.mes, 307, 412, { f: bold, size: 7.5, maxW: 25 });
-      draw(d.ano, 338, 412, { f: bold, size: 7.5, maxW: 35 });
+      // Data: x0=283.9 top=421.3 -> pdf_y=412
+      drawDate(283.9, 412);
     }
 
     if (leaveType === 'acidente') {
-      // Manhã: box x0=373.6 top=445.8 -> pdf_y=841.92-454.8=387.1
+      // Manhã: box x0=373.6 top=445.8 -> pdf_y=387
       if (shift === 'manha') markX(374, 387);
-      // Tarde: box x0=457.1 top=446.3 -> pdf_y=841.92-455.3=386.6
+      // Tarde: box x0=457.1 top=446.3 -> pdf_y=387
       if (shift === 'tarde') markX(458, 387);
-      // Agendamento: box x0=34.9 top=465.0 -> pdf_y=841.92-474=367.9
+      // Agendamento: box x0=34.9 top=465.0 -> pdf_y=368
       markX(35, 368);
-      // Data: x0=259.5 top=463.3 -> pdf_y=841.92-472.3=369.6
-      draw(d.dia, 260, 370, { f: bold, size: 7.5, maxW: 20 });
-      draw(d.mes, 283, 370, { f: bold, size: 7.5, maxW: 25 });
-      draw(d.ano, 314, 370, { f: bold, size: 7.5, maxW: 35 });
+      // Data: '____/_____/_____' x0=259.5 top=463.3 -> pdf_y=370
+      drawDate(259.5, 370);
     }
 
     if (leaveType === 'acompanhamento') {
-      // Acompanhamento checkbox: box x0=34.9 top=487.2 -> pdf_y=841.92-496.2=345.7
+      // Acompanhamento checkbox: box x0=34.9 top=487.2 -> pdf_y=345
       markX(35, 345);
-      // Manhã acomp: box x0=370.9 top=487.7 -> pdf_y=841.92-496.7=345.2
+      // Manhã: box x0=370.9 top=487.7 -> pdf_y=345
       if (shift === 'manha') markX(371, 345);
-      // Tarde acomp: box x0=457.9 top=486.8 -> pdf_y=841.92-495.8=346.1
+      // Tarde: box x0=457.9 top=486.8 -> pdf_y=346
       if (shift === 'tarde') markX(458, 346);
-      // Sub-tipo 01_03: box x0=163.4 top=506.9 -> pdf_y=841.92-515.9=326
+      // Sub-tipo 01_03: box x0=163.4 top=506.9 -> pdf_y=326
       if (acompType === '01_03')    markX(164, 326);
-      // Sub-tipo acima04: box x0=163.0 top=521.8 -> pdf_y=841.92-530.8=311.1
+      // Sub-tipo acima04: box x0=163.0 top=521.8 -> pdf_y=311
       if (acompType === 'acima_04') markX(164, 311);
-      // Data acomp: '____/_____/_______' x0=174.6 top=536.3 -> pdf_y=841.92-545.3=296.6
-      draw(d.dia, 175, 297, { f: bold, size: 7.5, maxW: 20 });
-      draw(d.mes, 198, 297, { f: bold, size: 7.5, maxW: 25 });
-      draw(d.ano, 229, 297, { f: bold, size: 7.5, maxW: 35 });
-      // Parentesco: texto começa após label em x=168 top=550.9 -> pdf_y=841.92-561=280.9
-      // label 'acompanhado(a):____' starts at x=168, preenchemos a linha em branco
+      // Data: '____/_____/_______' x0=174.6 top=536.3 -> pdf_y=297
+      drawDate(174.6, 297);
+      // Parentesco: após 'acompanhado(a):____' — label termina ~x420, escrevemos após
       draw(kinship, 338, 281, { maxW: 220 });
     }
 
     // ── Rodapé: CONTAGEM-MG, __/__ /____  (Data) ────────────────────
-    // Barras em x=308.1 e x=335.9, top=797.7 -> pdf_y=841.92-807.7=34.2
-    // dia antes de 308 -> x=285, mes entre 308-335 -> x=313, ano após 335 -> x=341
-    draw(d.dia,  285, 35, { f: bold, size: 8, maxW: 22 });
-    draw(d.mes,  313, 35, { f: bold, size: 8, maxW: 22 });
-    draw(d.ano,  341, 35, { f: bold, size: 8, maxW: 40 });
+    // Barras em x=308.1 e x=335.9, top=797.7 -> pdf_y=34
+    // Campo começa após última barra do 'CONTAGEM-MG, ____' -> x~285
+    drawDate(285, 35);
   };
 
   const appendDocumentPages = async (pdfDoc, pdfLib, docFile) => {
