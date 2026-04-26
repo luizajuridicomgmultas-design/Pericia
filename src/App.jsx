@@ -181,54 +181,82 @@ export default function App() {
   };
 
   const fillOfficialForm = async (pdfDoc, pdfLib) => {
-    const { StandardFonts, rgb } = pdfLib;
-    const page = pdfDoc.getPages()[0];
+    // O PDF tem campos AcroForm reais. Usamos form.getTextField / getCheckBox
+    // para preencher cada campo pelo nome — muito mais confiável que coordenadas.
+    // Mapeamento extraído via pypdf inspecionando annotations + /Rect.
+    const { StandardFonts } = pdfLib;
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const black = rgb(0, 0, 0);
+    const form = pdfDoc.getForm();
     const d = splitData(date);
 
-    // Coordenadas extraídas diretamente do PDF original via pdfplumber (origem canto inferior esquerdo).
-    // Fórmula: pdflib_y = pageHeight(842) - word.bottom
-    safeDraw(page, user.nome, 110, 713, { font, size: 7.4, maxWidth: 310, color: black });
-    safeDraw(page, user.cpf, 453, 713, { font, size: 7.4, maxWidth: 88, color: black });
-    safeDraw(page, user.cargo, 101, 697, { font, size: 7.1, maxWidth: 200, color: black });
-    safeDraw(page, user.orgao, 383, 697, { font, size: 7.4, maxWidth: 120, color: black });
-    safeDraw(page, user.mat1, 96, 682, { font, size: 7.4, maxWidth: 120, color: black });
-    safeDraw(page, user.unid1, 148, 667, { font, size: 7.1, maxWidth: 110, color: black });
-    markX(page, 100, 650, bold); // Efetivo(a)
-    safeDraw(page, user.tel, 72, 627, { font, size: 7.1, maxWidth: 105, color: black });
-    safeDraw(page, user.email, 237, 627, { font, size: 6.7, maxWidth: 180, color: black });
+    const setText = (name, value) => {
+      try {
+        const field = form.getTextField(name);
+        field.setText(value || '');
+        field.updateAppearances(font);
+      } catch (e) { /* campo inexistente, ignorar */ }
+    };
 
-    // Turno
-    if (shift === 'manha') markX(page, 345, 583, bold);
-    if (shift === 'tarde') markX(page, 434, 583, bold);
+    const checkBox = (name, checked = true) => {
+      try {
+        const field = form.getCheckBox(name);
+        if (checked) field.check(); else field.uncheck();
+        field.updateAppearances();
+      } catch (e) { /* ignorar */ }
+    };
 
-    // Tipo de perícia e data da linha correta
+    // --- Dados pessoais ---
+    setText('text_1fydk', user.nome);       // Nome completo
+    setText('text_4nlgj', user.cpf);        // CPF
+    setText('text_2feur', user.cargo);      // Cargo/Função
+    setText('text_3uoxh', user.orgao);      // Órgão (lotação)
+    setText('text_7rnef', user.mat1);       // Mat. 1º cargo
+    setText('text_8dhpx', user.unid1);      // Unid. (lotação) 1º cargo
+    setText('text_59cnlv', user.tel);       // Telefone
+    setText('text_60plxi', user.email);     // E-mail
+
+    // Situação funcional (Efetivo = checkbox_13hpy)
+    if (user.sit === 'Efetivo(a)')      checkBox('checkbox_13hpy');
+    if (user.sit === 'Comissionado(a)') checkBox('checkbox_10qjok');
+    if (user.sit === 'Contratado(a)')   checkBox('checkbox_11bsdt');
+
+    // --- Turno (só exibido quando não é 01_03) ---
+    if (shift === 'manha') checkBox('checkbox_14hvbi');
+    if (shift === 'tarde') checkBox('checkbox_15yrdw');
+
+    // --- Tipo de perícia + data ---
     if (leaveType === '01_03') {
-      markX(page, 31, 568, bold);
-      safeDraw(page, d.completa, 401, 568, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      checkBox('checkbox_19bsuw');
+      setText('text_16nctw', d.dia);
+      setText('text_17lvtq', d.mes);
+      setText('text_18clxb', d.ano);
     }
     if (leaveType === '04_15') {
-      markX(page, 31, 527, bold);
-      safeDraw(page, d.completa, 401, 527, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      checkBox('checkbox_20wzmx');
+      setText('text_48avtv', d.dia);
+      setText('text_49pjps', d.mes);
+      setText('text_44kibc', d.ano);
     }
     if (leaveType === 'acima_15') {
-      markX(page, 31, 500, bold);
-      safeDraw(page, d.completa, 394, 500, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      checkBox('checkbox_21xdyl');
+      setText('text_50ejbg', d.dia);
+      setText('text_51jeff', d.mes);
+      setText('text_45wwci', d.ano);
     }
     if (leaveType === 'acompanhamento') {
-      markX(page, 31, 431, bold);
-      safeDraw(page, d.completa, 487, 431, { font: bold, size: 7.6, maxWidth: 75, color: black });
-      if (acompType === '01_03') markX(page, 151, 406, bold);
-      if (acompType === 'acima_04') markX(page, 151, 393, bold);
-      safeDraw(page, kinship, 157, 373, { font, size: 7.4, maxWidth: 220, color: black });
+      checkBox('checkbox_23eaiw');
+      setText('text_54hnan', d.dia);
+      setText('text_55psmr', d.mes);
+      setText('text_47mpnd', d.ano);
+      if (acompType === '01_03')    checkBox('checkbox_24nmqk');
+      if (acompType === 'acima_04') checkBox('checkbox_25jkkv');
+      setText('text_57vpmj', kinship);
     }
 
-    // Rodapé da data (barras em x=308 e x=334, ano após x=345)
-    safeDraw(page, d.dia, 285, 52, { font: bold, size: 8, maxWidth: 22, color: black });
-    safeDraw(page, d.mes, 315, 52, { font: bold, size: 8, maxWidth: 22, color: black });
-    safeDraw(page, d.ano, 345, 52, { font: bold, size: 8, maxWidth: 40, color: black });
+    // --- Rodapé: data ---
+    setText('text_41jsrk', d.dia);
+    setText('text_42dzyj', d.mes);
+    setText('text_43igep', d.ano);
   };
 
   const appendDocumentPages = async (pdfDoc, pdfLib, docFile) => {
@@ -283,6 +311,8 @@ export default function App() {
       const pdfDoc = await PDFDocument.load(templateBytes);
 
       await fillOfficialForm(pdfDoc, pdfLib);
+      // Achata os campos AcroForm — texto fica gravado no PDF, sem sobreposição
+      pdfDoc.getForm().flatten();
       await appendDocumentPages(pdfDoc, pdfLib, atestadoDoc);     // Página 2
       await appendDocumentPages(pdfDoc, pdfLib, identidadeDoc);   // Página 3
 
