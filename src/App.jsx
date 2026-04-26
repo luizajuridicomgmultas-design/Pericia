@@ -334,7 +334,8 @@ export default function App() {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="block w-full max-w-full box-border text-xl sm:text-2xl p-4 border-4 border-blue-400 rounded-lg focus:outline-none focus:border-blue-700 font-bold text-center bg-blue-50"
+              className="block w-full min-w-0 max-w-full box-border h-20 text-lg sm:text-xl px-2 border-4 border-blue-400 rounded-lg focus:outline-none focus:border-blue-700 font-bold text-center bg-blue-50 overflow-hidden"
+              style={{ WebkitAppearance: 'none', appearance: 'none', lineHeight: '1.2' }}
             />
           </div>
 
