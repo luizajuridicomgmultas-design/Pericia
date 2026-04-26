@@ -162,14 +162,21 @@ export default function App() {
                 doc.text("X", x, y);
             };
 
-            const drawText = (text, x, y, size = 7, style = "normal") => {
+            const drawText = (text, x, y, size = 8, style = "normal") => {
                 doc.setFont("helvetica", style);
                 doc.setFontSize(size);
-                doc.text(String(text || ""), x, y, { baseline: "middle" });
+                doc.text(String(text || ""), x, y);
             };
 
             const drawDate = (x, y) => {
-                drawText(formatDataBR(date), x, y, 8, "bold");
+                drawText(formatDataBR(date), x, y, 8.5, "bold");
+            };
+
+            const drawBottomDate = () => {
+                const [ano, mes, dia] = date.split("-");
+                drawText(dia || "", 97.5, 286.8, 8.5, "bold");
+                drawText(mes || "", 111.5, 286.8, 8.5, "bold");
+                drawText(ano || "", 125.5, 286.8, 8.5, "bold");
             };
 
             // PÁGINA 1 - FORMULÁRIO OFICIAL COMO FUNDO
@@ -178,51 +185,54 @@ export default function App() {
 
             // Dados da servidora - posicionados sobre os campos do formulário oficial
             doc.setTextColor(0, 0, 0);
-            drawText(user.nome, 36, 43.4, 6.7);
-            drawText(user.cpf, 159, 43.4, 6.7);
-            drawText(user.cargo, 27, 48.9, 6.7);
-            drawText(user.orgao, 124, 48.9, 6.7);
-            drawText(user.mat1, 30, 54.4, 6.7);
-            drawText(user.unid1, 47, 59.9, 6.4);
-            drawX(37.2, 65.9); // Efetivo(a)
-            drawText(user.tel, 24, 76.8, 6.7);
-            drawText(user.email, 76, 76.8, 6.5);
+            drawText(user.nome, 42.5, 38.8, 8);
+            drawText(user.cpf, 161.5, 38.8, 8);
+            drawText(user.cargo, 35.5, 45.0, 8);
+            drawText(user.orgao, 132.0, 45.0, 8);
+            drawText(user.mat1, 37.0, 50.7, 8);
+            drawText(user.unid1, 55.0, 56.7, 8);
+            drawX(34.9, 66.2); // Efetivo(a)
+            drawText(user.tel, 31.0, 75.5, 8);
+            drawText(user.email, 87.5, 75.5, 8);
 
             // Turno - somente quando a opção exige período
             if (leaveType !== "01_03") {
-                if (shift === "manha") drawX(122.3, 89.4);
-                if (shift === "tarde") drawX(153.2, 89.4);
+                if (shift === "manha") drawX(121.5, 91.8);
+                if (shift === "tarde") drawX(154.0, 91.8);
             }
 
             // Tipo de perícia + data
             if (leaveType === "01_03") {
-                drawX(12.7, 94.3);
-                drawDate(141.3, 94.2);
+                drawX(11.8, 98.2);
+                drawDate(148.5, 99.0);
             }
 
             if (leaveType === "04_15") {
-                drawX(12.7, 109.1);
-                drawDate(141.3, 109.1);
+                drawX(11.8, 111.8);
+                drawDate(149.0, 112.4);
             }
 
             if (leaveType === "acima_15") {
-                drawX(12.7, 118.4);
-                drawDate(139.0, 118.4);
+                drawX(11.8, 122.0);
+                drawDate(147.0, 122.5);
             }
 
             if (leaveType === "acompanhamento") {
-                drawX(12.7, 143.2);
-                drawDate(172.3, 143.2);
+                drawX(11.8, 143.4);
+                drawDate(176.0, 143.9);
 
                 if (acompType === "01_03") {
-                    drawX(52.8, 152.0);
+                    drawX(51.2, 153.6);
                 }
 
                 if (acompType === "acima_04") {
-                    drawX(52.8, 157.0);
+                    drawX(51.2, 159.0);
                 }
 
-                drawText(kinship, 83, 163.4, 7);
+                drawText(kinship, 83.5, 166.6, 8);
+            }
+
+            drawBottomDate();
             }
 
             const addFullPageImage = async (imageDataUrl) => {
@@ -350,7 +360,8 @@ export default function App() {
                             type="date" 
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
-                            className="w-full text-2xl p-4 border-4 border-blue-400 rounded-lg focus:outline-none focus:border-blue-700 font-bold text-center bg-blue-50"
+                            className="w-full max-w-full text-xl sm:text-2xl p-4 border-4 border-blue-400 rounded-lg focus:outline-none focus:border-blue-700 font-bold text-center bg-blue-50 box-border"
+                            style={{ maxWidth: "100%", minWidth: 0, boxSizing: "border-box", WebkitAppearance: "none", appearance: "none" }}
                         />
                     </div>
 
