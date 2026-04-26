@@ -154,39 +154,41 @@ export default function App() {
                 if (!value) return;
                 page.drawText(String(value), { x, y, size, font: fontToUse, color: rgb(0, 0, 0) });
             };
-            const mark = (x, y) => page.drawText("X", { x, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+            const mark = (x, y) => page.drawText("X", { x, y, size: 10, font: boldFont, color: rgb(0, 0, 0) });
 
             const [ano, mes, dia] = date.split("-");
             const dataLinha = `${dia}/${mes}/${ano}`;
 
-            // Dados do cabeçalho do formulário oficial
-            draw(user.nome, 106, 707, 8);
-            draw(user.cpf, 505, 707, 8);
-            draw(user.cargo, 88, 690, 8);
-            draw(user.orgao, 392, 690, 8);
-            draw(user.mat1, 88, 673, 8);
-            draw(user.unid1, 132, 656, 8);
-            mark(94, 638);
-            draw(user.tel, 80, 612, 8);
-            draw(user.email, 280, 612, 8);
+            // Dados preenchidos no PDF oficial. Coordenadas ajustadas para o template original.
+            draw(user.nome, 106, 717, 7.2);
+            draw(user.cpf, 492, 717, 7.2);
+            draw(user.cargo, 106, 704, 7.2);
+            draw(user.orgao, 388, 704, 7.2);
+            draw(user.mat1, 98, 688, 7.2);
+            draw(user.unid1, 148, 672, 7.0);
+            mark(95, 654);
+            draw(user.tel, 74, 640, 7.2);
+            draw(user.email, 265, 640, 7.2);
 
-            if (shift === "manha") mark(343, 579);
-            if (shift === "tarde") mark(432, 579);
-
-            if (leaveType === "01_03") { mark(29, 560); draw(dataLinha, 405, 562, 8, boldFont); }
-            if (leaveType === "04_15") { mark(29, 514); draw(dataLinha, 405, 516, 8, boldFont); }
-            if (leaveType === "acima_15") { mark(29, 481); draw(dataLinha, 405, 483, 8, boldFont); }
-            if (leaveType === "acompanhamento") {
-                mark(29, 424);
-                draw(dataLinha, 500, 426, 8, boldFont);
-                if (acompType === "01_03") mark(149, 391);
-                if (acompType === "acima_04") mark(149, 374);
-                draw(kinship, 240, 340, 8);
+            if (leaveType !== "01_03") {
+                if (shift === "manha") mark(344, 589);
+                if (shift === "tarde") mark(433, 589);
             }
 
-            draw(dia, 267, 25, 8, boldFont);
-            draw(mes, 306, 25, 8, boldFont);
-            draw(ano, 352, 25, 8, boldFont);
+            if (leaveType === "01_03") { mark(29, 575); draw(dataLinha, 401, 576, 7.2, boldFont); }
+            if (leaveType === "04_15") { mark(29, 533); draw(dataLinha, 401, 533, 7.2, boldFont); }
+            if (leaveType === "acima_15") { mark(29, 505); draw(dataLinha, 401, 505, 7.2, boldFont); }
+            if (leaveType === "acompanhamento") {
+                mark(29, 435);
+                draw(dataLinha, 497, 435, 7.2, boldFont);
+                if (acompType === "01_03") mark(149, 405);
+                if (acompType === "acima_04") mark(149, 388);
+                draw(kinship, 236, 357, 7.2);
+            }
+
+            draw(dia, 276, 55, 7.5, boldFont);
+            draw(mes, 318, 55, 7.5, boldFont);
+            draw(ano, 362, 55, 7.5, boldFont);
 
             const addFullPageImage = async (imageDataUrl) => {
                 const compressedImg = await compressImageDataUrl(imageDataUrl, 1500, 0.78);
