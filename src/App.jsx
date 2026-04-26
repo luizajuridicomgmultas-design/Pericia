@@ -84,15 +84,6 @@ export default function App() {
         setIdentidadeImg(null);
     };
 
-    const blobToBase64 = (blob) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(",")[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-    };
-
     const base64ToUint8Array = (base64) => {
         const binary = atob(base64);
         const bytes = new Uint8Array(binary.length);
