@@ -181,82 +181,131 @@ export default function App() {
   };
 
   const fillOfficialForm = async (pdfDoc, pdfLib) => {
-    // O PDF tem campos AcroForm reais. Usamos form.getTextField / getCheckBox
-    // para preencher cada campo pelo nome — muito mais confiável que coordenadas.
-    // Mapeamento extraído via pypdf inspecionando annotations + /Rect.
-    const { StandardFonts } = pdfLib;
+    // Este PDF é estático (sem AcroForm). Usamos drawText em coordenadas extraídas
+    // via pdfplumber. Sistema de coordenadas pdf-lib: origem canto INFERIOR esquerdo.
+    // pdf_y = 841.92 - word.bottom  (onde word.bottom = word.top + font_size)
+    const { StandardFonts, rgb } = pdfLib;
+    const page = pdfDoc.getPages()[0];
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const form = pdfDoc.getForm();
+    const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const black = rgb(0, 0, 0);
     const d = splitData(date);
 
-    const setText = (name, value) => {
-      try {
-        const field = form.getTextField(name);
-        field.setText(value || '');
-        field.updateAppearances(font);
-      } catch (e) { /* campo inexistente, ignorar */ }
+    const draw = (text, x, y, opts = {}) => {
+      if (!text) return;
+      const { f = font, size = 7.5, maxW = 200 } = opts;
+      let s = size;
+      let t = String(text);
+      while (f.widthOfTextAtSize(t, s) > maxW && s > 5) s -= 0.2;
+      page.drawText(t, { x, y, size: s, font: f, color: black });
     };
 
-    const checkBox = (name, checked = true) => {
-      try {
-        const field = form.getCheckBox(name);
-        if (checked) field.check(); else field.uncheck();
-        field.updateAppearances();
-      } catch (e) { /* ignorar */ }
+    // Marca X dentro de um checkbox (box de 9x9pts)
+    const markX = (x, y) => {
+      page.drawText('X', { x: x + 1, y: y + 1, size: 7, font: bold, color: black });
     };
 
-    // --- Dados pessoais ---
-    setText('text_1fydk', user.nome);       // Nome completo
-    setText('text_4nlgj', user.cpf);        // CPF
-    setText('text_2feur', user.cargo);      // Cargo/Função
-    setText('text_3uoxh', user.orgao);      // Órgão (lotação)
-    setText('text_7rnef', user.mat1);       // Mat. 1º cargo
-    setText('text_8dhpx', user.unid1);      // Unid. (lotação) 1º cargo
-    setText('text_59cnlv', user.tel);       // Telefone
-    setText('text_60plxi', user.email);     // E-mail
+    // ── Dados pessoais ──────────────────────────────────────────────
+    // Nome completo: label termina ~x110, linha em top=119.8 -> pdf_y~711
+    draw(user.nome, 112, 711, { maxW: 305 });
+    // CPF: label 'CPF:' em x=429.5 -> texto após x=453
+    draw(user.cpf, 453, 711, { maxW: 100 });
+    // Cargo: label termina ~x101, top=135.1 -> pdf_y~696
+    draw(user.cargo, 101, 696, { maxW: 200 });
+    // Órgão: label termina ~x383, top=135.1 -> pdf_y~696
+    draw(user.orgao, 383, 696, { maxW: 170 });
+    // Mat. 1º cargo: label termina ~x96, top=150.2 -> pdf_y~681
+    draw(user.mat1, 96, 681, { maxW: 200 });
+    // Unid. 1º cargo: label termina ~x148, top=165.3 -> pdf_y~666
+    draw(user.unid1, 148, 666, { maxW: 125 });
+    // Telefone: label termina ~x95, top=204.8 -> pdf_y~626
+    draw(user.tel, 95, 626, { maxW: 95 });
+    // E-mail: label termina ~x228, top=204.8 -> pdf_y~626
+    draw(user.email, 228, 626, { maxW: 320 });
 
-    // Situação funcional (Efetivo = checkbox_13hpy)
-    if (user.sit === 'Efetivo(a)')      checkBox('checkbox_13hpy');
-    if (user.sit === 'Comissionado(a)') checkBox('checkbox_10qjok');
-    if (user.sit === 'Contratado(a)')   checkBox('checkbox_11bsdt');
+    // Situação funcional — checkboxes de 9x9 em top~182
+    // Efetivo x0=102.9, Comissionado x0=167.5, Contratado x0=264.2
+    if (user.sit === 'Efetivo(a)')      markX(103, 650);
+    if (user.sit === 'Comissionado(a)') markX(168, 650);
+    if (user.sit === 'Contratado(a)')   markX(265, 649);
 
-    // --- Turno (só exibido quando não é 01_03) ---
-    if (shift === 'manha') checkBox('checkbox_14hvbi');
-    if (shift === 'tarde') checkBox('checkbox_15yrdw');
+    // ── Tipo de perícia ─────────────────────────────────────────────
+    // Cada seção tem: checkbox de agendamento (x0=34.9) + Manhã/Tarde + data
 
-    // --- Tipo de perícia + data ---
     if (leaveType === '01_03') {
-      checkBox('checkbox_19bsuw');
-      setText('text_16nctw', d.dia);
-      setText('text_17lvtq', d.mes);
-      setText('text_18clxb', d.ano);
-    }
-    if (leaveType === '04_15') {
-      checkBox('checkbox_20wzmx');
-      setText('text_48avtv', d.dia);
-      setText('text_49pjps', d.mes);
-      setText('text_44kibc', d.ano);
-    }
-    if (leaveType === 'acima_15') {
-      checkBox('checkbox_21xdyl');
-      setText('text_50ejbg', d.dia);
-      setText('text_51jeff', d.mes);
-      setText('text_45wwci', d.ano);
-    }
-    if (leaveType === 'acompanhamento') {
-      checkBox('checkbox_23eaiw');
-      setText('text_54hnan', d.dia);
-      setText('text_55psmr', d.mes);
-      setText('text_47mpnd', d.ano);
-      if (acompType === '01_03')    checkBox('checkbox_24nmqk');
-      if (acompType === 'acima_04') checkBox('checkbox_25jkkv');
-      setText('text_57vpmj', kinship);
+      // Checkbox agendamento: box x0=34.9 top=281.5 -> pdf_y=841.92-290.5=551
+      markX(35, 551);
+      // Data: '____/_____/_____' começa x=283.9 top=279.9 -> pdf_y=841.92-289.9=552
+      draw(d.dia, 284, 552, { f: bold, size: 7.5, maxW: 20 });
+      draw(d.mes, 307, 552, { f: bold, size: 7.5, maxW: 25 });
+      draw(d.ano, 338, 552, { f: bold, size: 7.5, maxW: 35 });
     }
 
-    // --- Rodapé: data ---
-    setText('text_41jsrk', d.dia);
-    setText('text_42dzyj', d.mes);
-    setText('text_43igep', d.ano);
+    if (leaveType === '04_15') {
+      // Manhã: box x0=370.6 top=331.4 -> pdf_y=841.92-340.4=501.5
+      if (shift === 'manha') markX(371, 501);
+      // Tarde: box x0=457.1 top=332.6 -> pdf_y=841.92-341.6=500.3
+      if (shift === 'tarde') markX(458, 500);
+      // Agendamento: box x0=34.9 top=351.4 -> pdf_y=841.92-360.4=481.5
+      markX(35, 481);
+      // Data: x0=283.9 top=349.7 -> pdf_y=841.92-358.7=483.2
+      draw(d.dia, 284, 483, { f: bold, size: 7.5, maxW: 20 });
+      draw(d.mes, 307, 483, { f: bold, size: 7.5, maxW: 25 });
+      draw(d.ano, 338, 483, { f: bold, size: 7.5, maxW: 35 });
+    }
+
+    if (leaveType === 'acima_15') {
+      // Manhã: box x0=371.3 top=402.8 -> pdf_y=841.92-411.8=430.1
+      if (shift === 'manha') markX(372, 430);
+      // Tarde: box x0=456.1 top=403.6 -> pdf_y=841.92-412.6=429.3
+      if (shift === 'tarde') markX(457, 429);
+      // Agendamento: box x0=34.9 top=422.9 -> pdf_y=841.92-431.9=410
+      markX(35, 410);
+      // Data: x0=283.9 top=421.3 -> pdf_y=841.92-430.3=411.6
+      draw(d.dia, 284, 412, { f: bold, size: 7.5, maxW: 20 });
+      draw(d.mes, 307, 412, { f: bold, size: 7.5, maxW: 25 });
+      draw(d.ano, 338, 412, { f: bold, size: 7.5, maxW: 35 });
+    }
+
+    if (leaveType === 'acidente') {
+      // Manhã: box x0=373.6 top=445.8 -> pdf_y=841.92-454.8=387.1
+      if (shift === 'manha') markX(374, 387);
+      // Tarde: box x0=457.1 top=446.3 -> pdf_y=841.92-455.3=386.6
+      if (shift === 'tarde') markX(458, 387);
+      // Agendamento: box x0=34.9 top=465.0 -> pdf_y=841.92-474=367.9
+      markX(35, 368);
+      // Data: x0=259.5 top=463.3 -> pdf_y=841.92-472.3=369.6
+      draw(d.dia, 260, 370, { f: bold, size: 7.5, maxW: 20 });
+      draw(d.mes, 283, 370, { f: bold, size: 7.5, maxW: 25 });
+      draw(d.ano, 314, 370, { f: bold, size: 7.5, maxW: 35 });
+    }
+
+    if (leaveType === 'acompanhamento') {
+      // Acompanhamento checkbox: box x0=34.9 top=487.2 -> pdf_y=841.92-496.2=345.7
+      markX(35, 345);
+      // Manhã acomp: box x0=370.9 top=487.7 -> pdf_y=841.92-496.7=345.2
+      if (shift === 'manha') markX(371, 345);
+      // Tarde acomp: box x0=457.9 top=486.8 -> pdf_y=841.92-495.8=346.1
+      if (shift === 'tarde') markX(458, 346);
+      // Sub-tipo 01_03: box x0=163.4 top=506.9 -> pdf_y=841.92-515.9=326
+      if (acompType === '01_03')    markX(164, 326);
+      // Sub-tipo acima04: box x0=163.0 top=521.8 -> pdf_y=841.92-530.8=311.1
+      if (acompType === 'acima_04') markX(164, 311);
+      // Data acomp: '____/_____/_______' x0=174.6 top=536.3 -> pdf_y=841.92-545.3=296.6
+      draw(d.dia, 175, 297, { f: bold, size: 7.5, maxW: 20 });
+      draw(d.mes, 198, 297, { f: bold, size: 7.5, maxW: 25 });
+      draw(d.ano, 229, 297, { f: bold, size: 7.5, maxW: 35 });
+      // Parentesco: texto começa após label em x=168 top=550.9 -> pdf_y=841.92-561=280.9
+      // label 'acompanhado(a):____' starts at x=168, preenchemos a linha em branco
+      draw(kinship, 338, 281, { maxW: 220 });
+    }
+
+    // ── Rodapé: CONTAGEM-MG, __/__ /____  (Data) ────────────────────
+    // Barras em x=308.1 e x=335.9, top=797.7 -> pdf_y=841.92-807.7=34.2
+    // dia antes de 308 -> x=285, mes entre 308-335 -> x=313, ano após 335 -> x=341
+    draw(d.dia,  285, 35, { f: bold, size: 8, maxW: 22 });
+    draw(d.mes,  313, 35, { f: bold, size: 8, maxW: 22 });
+    draw(d.ano,  341, 35, { f: bold, size: 8, maxW: 40 });
   };
 
   const appendDocumentPages = async (pdfDoc, pdfLib, docFile) => {
@@ -311,8 +360,6 @@ export default function App() {
       const pdfDoc = await PDFDocument.load(templateBytes);
 
       await fillOfficialForm(pdfDoc, pdfLib);
-      // Achata os campos AcroForm — texto fica gravado no PDF, sem sobreposição
-      pdfDoc.getForm().flatten();
       await appendDocumentPages(pdfDoc, pdfLib, atestadoDoc);     // Página 2
       await appendDocumentPages(pdfDoc, pdfLib, identidadeDoc);   // Página 3
 
