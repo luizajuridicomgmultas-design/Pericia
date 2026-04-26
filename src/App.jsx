@@ -149,6 +149,15 @@ export default function App() {
     return `${dia}/${mes}/${ano}`;
   };
 
+
+
+  const formatDataLongBR = (dataString) => {
+    if (!dataString) return "";
+    const [ano, mes, dia] = dataString.split('-');
+    const meses = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+    return `${Number(dia)} de ${meses[Number(mes) - 1]} de ${ano}`;
+  };
+
   const splitData = (dataString) => {
     const [ano, mes, dia] = dataString.split('-');
     return { dia, mes, ano, completa: `${dia}/${mes}/${ano}` };
@@ -180,15 +189,15 @@ export default function App() {
     const d = splitData(date);
 
     // Campos superiores. Coordenadas calculadas diretamente sobre o PDF original A4.
-    safeDraw(page, user.nome, 98, 710, { font, size: 7.4, maxWidth: 310, color: black });
-    safeDraw(page, user.cpf, 469, 710, { font, size: 7.4, maxWidth: 88, color: black });
-    safeDraw(page, user.cargo, 101, 695, { font, size: 7.1, maxWidth: 180, color: black });
-    safeDraw(page, user.orgao, 398, 695, { font, size: 7.4, maxWidth: 120, color: black });
-    safeDraw(page, user.mat1, 96, 680, { font, size: 7.4, maxWidth: 90, color: black });
-    safeDraw(page, user.unid1, 127, 665, { font, size: 7.1, maxWidth: 145, color: black });
-    markX(page, 104, 647, bold); // Efetivo(a)
-    safeDraw(page, user.tel, 72, 619, { font, size: 7.1, maxWidth: 105, color: black });
-    safeDraw(page, user.email, 237, 619, { font, size: 6.7, maxWidth: 180, color: black });
+    safeDraw(page, user.nome, 98, 714, { font, size: 7.4, maxWidth: 310, color: black });
+    safeDraw(page, user.cpf, 469, 714, { font, size: 7.4, maxWidth: 88, color: black });
+    safeDraw(page, user.cargo, 101, 699, { font, size: 7.1, maxWidth: 180, color: black });
+    safeDraw(page, user.orgao, 398, 699, { font, size: 7.4, maxWidth: 120, color: black });
+    safeDraw(page, user.mat1, 96, 684, { font, size: 7.4, maxWidth: 90, color: black });
+    safeDraw(page, user.unid1, 127, 669, { font, size: 7.1, maxWidth: 145, color: black });
+    markX(page, 99, 648, bold); // Efetivo(a)
+    safeDraw(page, user.tel, 72, 632, { font, size: 7.1, maxWidth: 105, color: black });
+    safeDraw(page, user.email, 237, 632, { font, size: 6.7, maxWidth: 180, color: black });
 
     // Turno
     if (shift === 'manha') markX(page, 344, 580, bold);
@@ -196,29 +205,29 @@ export default function App() {
 
     // Tipo de perícia e data da linha correta
     if (leaveType === '01_03') {
-      markX(page, 35, 563, bold);
-      safeDraw(page, d.completa, 421, 564, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      markX(page, 31, 567, bold);
+      safeDraw(page, d.completa, 421, 568, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === '04_15') {
-      markX(page, 35, 523, bold);
-      safeDraw(page, d.completa, 421, 524, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      markX(page, 31, 527, bold);
+      safeDraw(page, d.completa, 421, 528, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === 'acima_15') {
-      markX(page, 35, 496, bold);
-      safeDraw(page, d.completa, 421, 497, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      markX(page, 31, 500, bold);
+      safeDraw(page, d.completa, 421, 501, { font: bold, size: 7.6, maxWidth: 75, color: black });
     }
     if (leaveType === 'acompanhamento') {
-      markX(page, 35, 424, bold);
-      safeDraw(page, d.completa, 513, 425, { font: bold, size: 7.6, maxWidth: 75, color: black });
+      markX(page, 31, 428, bold);
+      safeDraw(page, d.completa, 513, 429, { font: bold, size: 7.6, maxWidth: 75, color: black });
       if (acompType === '01_03') markX(page, 151, 385, bold);
       if (acompType === 'acima_04') markX(page, 151, 370, bold);
       safeDraw(page, kinship, 238, 341, { font, size: 7.4, maxWidth: 145, color: black });
     }
 
     // Rodapé da data
-    safeDraw(page, d.dia, 292, 49, { font: bold, size: 8, maxWidth: 22, color: black });
-    safeDraw(page, d.mes, 336, 49, { font: bold, size: 8, maxWidth: 22, color: black });
-    safeDraw(page, d.ano, 380, 49, { font: bold, size: 8, maxWidth: 40, color: black });
+    safeDraw(page, d.dia, 292, 55, { font: bold, size: 8, maxWidth: 22, color: black });
+    safeDraw(page, d.mes, 336, 55, { font: bold, size: 8, maxWidth: 22, color: black });
+    safeDraw(page, d.ano, 380, 55, { font: bold, size: 8, maxWidth: 40, color: black });
   };
 
   const appendDocumentPages = async (pdfDoc, pdfLib, docFile) => {
@@ -330,13 +339,18 @@ export default function App() {
 
           <div className="bg-white p-6 rounded-xl border-4 border-slate-200 shadow-sm overflow-hidden">
             <label className="block text-2xl font-bold text-slate-800 mb-4">Data de início do atestado:</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="block w-full min-w-0 max-w-full box-border h-20 text-lg sm:text-xl px-2 border-4 border-blue-400 rounded-lg focus:outline-none focus:border-blue-700 font-bold text-center bg-blue-50 overflow-hidden"
-              style={{ WebkitAppearance: 'none', appearance: 'none', lineHeight: '1.2' }}
-            />
+            <div className="relative w-full max-w-full box-border h-20 border-4 border-blue-400 rounded-lg bg-blue-50 overflow-hidden flex items-center justify-center px-2">
+              <span className="text-2xl font-extrabold text-slate-900 leading-none text-center pointer-events-none whitespace-nowrap">
+                {formatDataLongBR(date)}
+              </span>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                aria-label="Data de início do atestado"
+              />
+            </div>
           </div>
 
           <div className="bg-white p-6 rounded-xl border-4 border-slate-200 shadow-sm flex flex-col gap-4">
