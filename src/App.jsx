@@ -136,6 +136,11 @@ export default function App() {
                 return;
             }
 
+            if (!identidadeImg) {
+                alert("Antes de enviar, salve a identidade desta pessoa.");
+                return;
+            }
+
             const { jsPDF } = window.jspdf;
             const html2canvas = window.html2canvas;
 
@@ -185,9 +190,7 @@ export default function App() {
 
             await addFullPageImage(atestadoImg);
 
-            if (identidadeImg) {
-                await addFullPageImage(identidadeImg);
-            }
+            await addFullPageImage(identidadeImg);
 
             const pdfBlob = doc.output("blob");
             const fileName = `Requerimento_${user.nome.split(" ")[0]}_${date.replace(/-/g, "")}.pdf`;
@@ -409,11 +412,11 @@ export default function App() {
                     </div>
 
                     <button 
-                        className={`mt-4 ${atestadoImg ? btnSuccess : btnBase + ' bg-slate-300 text-slate-500 cursor-not-allowed border-slate-400'}`}
-                        onClick={() => { if(atestadoImg) setStep(4); }}
-                        disabled={!atestadoImg}
+                        className={`mt-4 ${atestadoImg && identidadeImg ? btnSuccess : btnBase + ' bg-slate-300 text-slate-500 cursor-not-allowed border-slate-400'}`}
+                        onClick={() => { if(atestadoImg && identidadeImg) setStep(4); }}
+                        disabled={!atestadoImg || !identidadeImg}
                     >
-                        {atestadoImg ? 'AVANÇAR' : 'Falta o Atestado'}
+                        {!atestadoImg ? 'Falta o Atestado' : !identidadeImg ? 'Falta a Identidade' : 'AVANÇAR'}
                     </button>
                 </div>
             )}
@@ -430,7 +433,7 @@ export default function App() {
                     <div className="bg-blue-50 border-4 border-blue-200 rounded-xl p-6 my-4 flex flex-col items-center">
                         <IconFile />
                         <p className="text-2xl font-bold text-blue-900 mt-4">
-                            1 Arquivo PDF será gerado contendo todas as informações.
+                            1 PDF será gerado com: formulário, atestado e identidade.
                         </p>
                     </div>
 
@@ -459,103 +462,112 @@ export default function App() {
                 </div>
             )}
 
-            {/* Oculto: Base para renderizar o PDF */}
+            {/* Oculto: Base para renderizar o PDF - Formulário oficial */}
             {user && (
-                <div 
-                    id="pdf-template-container" 
-                    style={{ position: 'absolute', left: '-9999px', top: 0, background: 'white', width: '210mm', padding: '10mm', fontFamily: 'Arial, sans-serif', color: 'black' }}
+                <div
+                    id="pdf-template-container"
+                    style={{ position: 'absolute', left: '-9999px', top: 0, background: 'white', width: '210mm', minHeight: '297mm', padding: '8mm 9mm', boxSizing: 'border-box', fontFamily: 'Arial, sans-serif', color: 'black', fontSize: '9px', lineHeight: '1.15' }}
                 >
-                    <div style={{ textAlign: 'center', fontSize: '12px', fontWeight: 'bold', marginBottom: '20px' }}>
-                        PREFEITURA MUNICIPAL DE CONTAGEM<br/>
-                        Secretaria Municipal de Administração<br/>
-                        Superintendência de Medicina e Segurança do Trabalho<br/>
-                        FORMULÁRIO/REQUERIMENTO PARA AGENDAMENTO/REALIZAÇÃO DE PERÍCIA MÉDICA E PSICOSSOCIAL
-                    </div>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: '2px solid black', borderLeft: '2px solid black', marginTop: '10px' }}>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px', gridColumn: 'span 2' }}>
-                            <b>Nome completo:</b> {user.nome} &nbsp;&nbsp;&nbsp;&nbsp; <b>CPF:</b> {user.cpf}
+                    <style>{`
+                        .oficial-page * { box-sizing: border-box; }
+                        .oficial-header { text-align:center; font-size:9px; font-weight:bold; line-height:1.25; margin-bottom:5px; }
+                        .oficial-title { font-size:9px; font-weight:bold; text-align:center; margin-top:2px; }
+                        .oficial-grid { display:grid; grid-template-columns: 1fr 1fr; border-left:1px solid #000; border-top:1px solid #000; }
+                        .oficial-cell { border-right:1px solid #000; border-bottom:1px solid #000; min-height:15px; padding:2px 4px; display:flex; align-items:center; gap:4px; }
+                        .oficial-span { grid-column: span 2; }
+                        .oficial-label { font-weight:bold; white-space:nowrap; }
+                        .oficial-check { display:inline-flex; width:10px; height:10px; border:1px solid #000; align-items:center; justify-content:center; font-size:8px; font-weight:bold; margin-right:3px; line-height:1; vertical-align:middle; }
+                        .oficial-red { color:#b00000; font-weight:bold; }
+                        .oficial-small { font-size:8px; }
+                        .oficial-line { border-bottom:1px solid #000; display:inline-block; min-width:70px; height:10px; vertical-align:bottom; }
+                        .oficial-date-line { border-bottom:1px solid #000; display:inline-block; min-width:58px; text-align:center; font-weight:bold; }
+                        .oficial-two-col { display:grid; grid-template-columns: 1fr 49mm; gap:4px; align-items:start; }
+                        .oficial-section { border:1px solid #000; border-top:none; padding:4px 5px; }
+                        .oficial-period { border:1px solid #000; padding:3px; text-align:center; font-weight:bold; font-size:8.5px; }
+                        .oficial-row { display:flex; align-items:flex-start; min-height:15px; }
+                        .oficial-footer-note { margin-top:8px; font-size:8.5px; line-height:1.2; }
+                        .oficial-requisitos { margin-top:6px; font-size:8.5px; line-height:1.2; }
+                    `}</style>
+
+                    <div className="oficial-page">
+                        <div className="oficial-header">
+                            Prefeitura Municipal de Contagem<br />
+                            Secretaria Municipal de Administração<br />
+                            Superintendência de Medicina e Segurança do Trabalho
                         </div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>Cargo/Função:</b> {user.cargo}</div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>Órgão (lotação):</b> {user.orgao}</div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>Mat. 1º cargo:</b> {user.mat1}</div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>Mat. 2º cargo:</b> </div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>Unid. (lotação) 1º cargo:</b> {user.unid1}</div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>Unid. (lotação) 2º cargo:</b> </div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px', gridColumn: 'span 2' }}>
-                            <b>Sit. funcional:</b> [X] Efetivo(a) &nbsp; [ ] Comissionado(a) &nbsp; [ ] Contratado(a)
+                        <div className="oficial-title">FORMULÁRIO/REQUERIMENTO PARA AGENDAMENTO/REALIZAÇÃO DE PERÍCIA MÉDICA E PSICOSSOCIAL</div>
+
+                        <div className="oficial-grid" style={{ marginTop: '5px' }}>
+                            <div className="oficial-cell"><span className="oficial-label">Nome completo:</span><span>{user.nome}</span></div>
+                            <div className="oficial-cell"><span className="oficial-label">CPF:</span><span>{user.cpf}</span></div>
+                            <div className="oficial-cell"><span className="oficial-label">Cargo/Função:</span><span>{user.cargo}</span></div>
+                            <div className="oficial-cell"><span className="oficial-label">Órgão (lotação):</span><span>{user.orgao}</span></div>
+                            <div className="oficial-cell"><span className="oficial-label">Mat. 1º cargo:</span><span>{user.mat1}</span></div>
+                            <div className="oficial-cell"><span className="oficial-label">Mat. 2º cargo:</span><span></span></div>
+                            <div className="oficial-cell"><span className="oficial-label">Unid. (lotação) 1º cargo:</span><span>{user.unid1}</span></div>
+                            <div className="oficial-cell"><span className="oficial-label">Unid. (lotação) 2º cargo:</span><span></span></div>
+                            <div className="oficial-cell oficial-span">
+                                <span className="oficial-label">Sit. funcional:</span>
+                                <span><span className="oficial-check">X</span>Efetivo(a)</span>
+                                <span><span className="oficial-check"></span>Comissionado(a)</span>
+                                <span><span className="oficial-check"></span>Contratado(a)</span>
+                                <span>Outros: _____________________________</span>
+                            </div>
+                            <div className="oficial-cell"><span className="oficial-label">Telefone:</span><span>{user.tel}</span></div>
+                            <div className="oficial-cell"><span className="oficial-label">E-mail:</span><span>{user.email}</span></div>
                         </div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>Telefone:</b> {user.tel}</div>
-                        <div style={{ borderBottom: '2px solid black', borderRight: '2px solid black', padding: '4px 8px', fontSize: '12px' }}><b>E-mail:</b> {user.email}</div>
-                    </div>
 
-                    <div style={{ marginTop: '20px', border: '2px solid black', padding: '10px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'red' }}>
-                                Assinale abaixo o Tipo de Perícia Médica:<br/>
-                                <span style={{fontSize: '10px', color: 'black'}}>*ATENÇÃO! Para cada Requerimento assinale apenas um único tipo.</span>
+                        <div className="oficial-section">
+                            <div className="oficial-two-col">
+                                <div>
+                                    <div className="oficial-red">Assinale abaixo o Tipo de Perícia Médica:</div>
+                                    <div className="oficial-small"><b>*ATENÇÃO!</b> Para cada Requerimento/solicitação assinale apenas<br />um único tipo de Perícia Médica a ser realizada.</div>
+                                </div>
+                                <div className="oficial-period">
+                                    Assinale abaixo o melhor período p/ agendamento:<br />
+                                    <span style={{ marginRight: '10px' }}><span className="oficial-check">{shift === 'manha' ? 'X' : ''}</span> MANHÃ</span>
+                                    <span><span className="oficial-check">{shift === 'tarde' ? 'X' : ''}</span> TARDE</span>
+                                </div>
                             </div>
-                            <div style={{ fontWeight: 'bold', fontSize: '12px', textAlign: 'center', border: '1px solid black', padding: '4px', backgroundColor: '#e2e8f0' }}>
-                                Assinale abaixo o melhor período p/ agendamento:
+
+                            <div style={{ marginTop: '5px' }}>
+                                <div className="oficial-row"><span className="oficial-check">{leaveType === '01_03' ? 'X' : ''}</span><span>Perícia Médica – Atestado de 01 a 03 dias – Data de início do atestado: <span className="oficial-date-line">{leaveType === '01_03' ? formatDataBR(date) : '___/___/_____'}</span></span></div>
+                                <div className="oficial-small" style={{ marginLeft: '14px' }}>* (anexar documentação - Atestado - obrigatório)</div>
+                                <div className="oficial-row"><span className="oficial-check">{leaveType === '04_15' ? 'X' : ''}</span><span>Perícia Médica – Atestado de 04 a 15 dias – Data de início do atestado: <span className="oficial-date-line">{leaveType === '04_15' ? formatDataBR(date) : '___/___/_____'}</span></span></div>
+                                <div className="oficial-row"><span className="oficial-check">{leaveType === 'acima_15' ? 'X' : ''}</span><span>Perícia Médica – Atestado acima 15 dias – Data de início do atestado: <span className="oficial-date-line">{leaveType === 'acima_15' ? formatDataBR(date) : '___/___/_____'}</span></span></div>
+                                <div className="oficial-row"><span className="oficial-check"></span><span>Perícia Médica – Acidente de trabalho – Data de início do atestado: <span className="oficial-date-line">___/___/_____</span></span></div>
+                                <div className="oficial-small" style={{ marginLeft: '14px' }}>*(anexar documentação CAT - obrigatório)</div>
+                                <div className="oficial-row"><span className="oficial-check">{leaveType === 'acompanhamento' ? 'X' : ''}</span><span>Licença p/acompanhamento - serviço p/servidores efetivos - Data de início do atestado: <span className="oficial-date-line">{leaveType === 'acompanhamento' ? formatDataBR(date) : '___/___/_____'}</span></span></div>
+                                <div style={{ marginLeft: '14px' }}>
+                                    * Assinale o tipo a seguir: <span className="oficial-check">{leaveType === 'acompanhamento' && acompType === '01_03' ? 'X' : ''}</span> Perícia médica de 01 a 03 dias - <span className="oficial-small">(anexar atestado e documentação – obrigatório)</span><br />
+                                    <span style={{ marginLeft: '91px' }}><span className="oficial-check">{leaveType === 'acompanhamento' && acompType === 'acima_04' ? 'X' : ''}</span> Perícia médica acima de 04 dias</span><br />
+                                    * Grau de parentesco do(a) acompanhado(a): <span className="oficial-line" style={{ minWidth: '65px' }}>{leaveType === 'acompanhamento' ? kinship : ''}</span>
+                                    <span style={{ marginLeft: '12px' }}><span className="oficial-check"></span> Diarista</span><br />
+                                    <span style={{ marginLeft: '235px' }}><span className="oficial-check"></span> Plantonista: carga horária: _______</span>
+                                </div>
+                                <div className="oficial-row"><span className="oficial-check"></span><span>Restrição Médica.</span></div>
+                                <div style={{ marginLeft: '14px' }}><b>ASSINALE O TIPO A SEGUIR:</b> <span className="oficial-check"></span> 1ª Restrição <span className="oficial-check"></span> Reavaliação da Restrição Médica.</div>
+                                <div className="oficial-row"><span className="oficial-check"></span><span>Licença Maternidade.</span></div>
+                                <div className="oficial-row"><span className="oficial-check"></span><span>Reagendamento – Perícias Médicas e Social.</span></div>
                             </div>
+
+                            <div style={{ height: '14px' }}></div>
+                            <div>
+                                <b>ASSINALE O TIPO A SEGUIR:</b>
+                                <span style={{ marginLeft: '8px' }}><span className="oficial-check"></span> Licença para acompanhamento</span>
+                                <span style={{ marginLeft: '8px' }}><span className="oficial-check"></span> Licença maternidade</span><br />
+                                <span style={{ marginLeft: '99px' }}><span className="oficial-check"></span> Perícia médica de 01 a 03 dias</span>
+                                <span style={{ marginLeft: '8px' }}><span className="oficial-check"></span> Perícia médica de 04 a 15 dias</span>
+                                <span style={{ marginLeft: '8px' }}><span className="oficial-check"></span> Perícia médica acima de 15 dias</span><br />
+                                <span style={{ marginLeft: '99px' }}><span className="oficial-check"></span> Perícia médica – Acidente de Trabalho</span>
+                                <span style={{ marginLeft: '8px' }}><span className="oficial-check"></span> Restrição médica</span>
+                            </div>
+                            <div className="oficial-footer-note">Atenção: é obrigatório anexar juntamente com o requerimento a documentação comprobatória conforme art. 4º, § 7,<br />Decreto Municipal 679, de 15/09/2022 e alterações do Decreto Municipal nº 808, de 18/01/2023.</div>
+                            <div style={{ marginTop: '8px' }}><span className="oficial-check"></span> Recurso Contra Indeferimento da solicitação de Perícia Médica. Nº completo PA <span className="oficial-line"></span><br /><span className="oficial-small">*(anexar junto ao formulário a devida justificativa)</span></div>
                         </div>
-                        
-                        <div style={{ fontSize: '12px', lineHeight: '1.6', marginTop: '10px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '4px' }}>
-                                <div>
-                                    <b>* Perícia Médica – Atestado de 01 a 03 dias</b><br/>
-                                    [{leaveType === '01_03' ? 'X' : ' '}] Agendamento &nbsp;&nbsp;&nbsp;&nbsp; Data de início do atestado: {leaveType === '01_03' ? formatDataBR(date) : '__/__/____'}
-                                </div>
-                                <div style={{ fontStyle: 'italic', color: '#555' }}>(anexar atestado - obrigatório)</div>
-                            </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '4px' }}>
-                                <div>
-                                    <b>* Perícia Médica – Atestado de 04 a 15 dias</b><br/>
-                                    [{leaveType === '04_15' ? 'X' : ' '}] Agendamento &nbsp;&nbsp;&nbsp;&nbsp; Data de início do atestado: {leaveType === '04_15' ? formatDataBR(date) : '__/__/____'}
-                                </div>
-                                <div>
-                                    [{leaveType === '04_15' && shift === 'manha' ? 'X' : ' '}] Manhã &nbsp;&nbsp;
-                                    [{leaveType === '04_15' && shift === 'tarde' ? 'X' : ' '}] Tarde
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '4px' }}>
-                                <div>
-                                    <b>* Perícia Médica – Atestado acima 15 dias</b><br/>
-                                    [{leaveType === 'acima_15' ? 'X' : ' '}] Agendamento &nbsp;&nbsp;&nbsp;&nbsp; Data de início do atestado: {leaveType === 'acima_15' ? formatDataBR(date) : '__/__/____'}
-                                </div>
-                                <div>
-                                    [{leaveType === 'acima_15' && shift === 'manha' ? 'X' : ' '}] Manhã &nbsp;&nbsp;
-                                    [{leaveType === 'acima_15' && shift === 'tarde' ? 'X' : ' '}] Tarde
-                                </div>
-                            </div>
-
-                            <div style={{ borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '4px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <div>
-                                        <b>[{leaveType === 'acompanhamento' ? 'X' : ' '}] Licença p/ Acompanhamento - serviço p/ servidores efetivos.</b>
-                                    </div>
-                                    <div>
-                                        [{leaveType === 'acompanhamento' && shift === 'manha' ? 'X' : ' '}] Manhã &nbsp;&nbsp;
-                                        [{leaveType === 'acompanhamento' && shift === 'tarde' ? 'X' : ' '}] Tarde
-                                    </div>
-                                </div>
-                                <div style={{ paddingLeft: '10px', marginTop: '4px' }}>
-                                    * Assinale o tipo a seguir: &nbsp;
-                                    [{leaveType === 'acompanhamento' && acompType === '01_03' ? 'X' : ' '}] Perícia médica de 01 a 03 dias<br/>
-                                    <span style={{ paddingLeft: '120px' }}>[{leaveType === 'acompanhamento' && acompType === 'acima_04' ? 'X' : ' '}] Perícia médica acima de 04 dias</span><br/>
-                                    * Data de início do atestado: {leaveType === 'acompanhamento' ? formatDataBR(date) : '__/__/____'}<br/>
-                                    * Grau de parentesco do(a) acompanhado(a): {leaveType === 'acompanhamento' ? kinship : '____________________________________'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style={{ marginTop: '40px', fontSize: '14px', textAlign: 'center' }}>
-                        <b>REQUISITOS:</b><br/>
-                        1. Formulário/requerimento específico preenchido e documentos exigidos conforme Decreto.<br/><br/><br/>
-                        <b>CONTAGEM-MG, ____ {formatDataBR(date)} ____ (Data)</b>
+                        <div className="oficial-requisitos"><b>REQUISITOS:</b><br />1. Formulário/requerimento específico preenchido e documentos exigidos conforme Decreto 679 de 15 de<br />setembro de 2022 e alterações do Decreto Municipal nº 808, de 18/01/2023.</div>
+                        <div style={{ marginTop: '14px', fontSize: '9px', textAlign: 'center' }}><b>CONTAGEM-MG, <span className="oficial-date-line" style={{ minWidth: '22px' }}></span> / <span className="oficial-date-line" style={{ minWidth: '22px' }}></span> / <span className="oficial-date-line" style={{ minWidth: '36px' }}></span> (Data)</b></div>
                     </div>
                 </div>
             )}

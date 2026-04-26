@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { fileName, pdfBase64, userName } = req.body;
+    const { fileName, pdfBase64, userName, userEmail } = req.body;
 
     if (!fileName || !pdfBase64 || !userName) {
       return res.status(400).json({
@@ -39,6 +39,7 @@ export default async function handler(req, res) {
     await transporter.sendMail({
       from: `"Perícia Médica App" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_TO,
+      replyTo: userEmail || process.env.EMAIL_USER,
       subject: `Requerimento de Perícia Médica - ${userName}`,
       text: `Segue em anexo o requerimento de perícia médica de ${userName}.`,
       attachments: [
@@ -46,6 +47,7 @@ export default async function handler(req, res) {
           filename: fileName,
           content: pdfBase64,
           encoding: "base64",
+          contentType: "application/pdf",
         },
       ],
     });
